@@ -85,37 +85,54 @@ end
 
 
 function [value] = mult_core(C1,C2)
-% "Multiplies" the cores C1 and C2
-tmp1 = size(C1);
-tmp2 = size(C2);
-d = length(tmp1);
 
-switch d
-    
-    case 2
-        C = kron(C1,C2);
-        
-    case 3
-        C = zeros(tmp1.*tmp2);
-        for l=1:tmp1(end)
-            for m=1:tmp2(end)
-                C(:,:,m+(l-1)*tmp2(end)) = ...
-                    kron(C1(:,:,l), C2(:,:,m));
-            end
-        end
-        
-    case 4
-        C = zeros(tmp1.*tmp2);
-        for l=1:tmp1(end)
-            for m=1:tmp2(end)
-                for p=1:tmp1(end-1)
-                    for q=1:tmp2(end-1)
-                        C(:,:,q+(p-1)*tmp2(end-1),m+(l-1)*tmp2(end)) = ...
-                            kron(C1(:,:,p,l), C2(:,:,q,m));
-                    end
-                end
-            end
-        end
-end
-value = C;
+s1 = size(C1);
+s2 = size(C2);
+nbDim = max(length(s1), length(s2));
+
+% We do the product
+value = reshape(C1,numel(C1),1) * reshape(C2,1,numel(C2));
+
+% And put the numbers back into their place
+value = reshape(value,[s1 s2]);
+value = permute(value,reshape([nbDim+1:2*nbDim;1:nbDim],1,2*nbDim));
+value = reshape(value, s1.*s2);
+
+% Idea from:
+% https://de.mathworks.com/matlabcentral/fileexchange/32578-superkron
+
+% % old code
+% % "Multiplies" the cores C1 and C2
+% tmp1 = size(C1);
+% tmp2 = size(C2);
+% d = length(tmp1);
+% 
+% switch d
+%     
+%     case 2
+%         C = kron(C1,C2);
+%         
+%     case 3
+%         C = zeros(tmp1.*tmp2);
+%         for l=1:tmp1(end)
+%             for m=1:tmp2(end)
+%                 C(:,:,m+(l-1)*tmp2(end)) = ...
+%                     kron(C1(:,:,l), C2(:,:,m));
+%             end
+%         end
+%         
+%     case 4
+%         C = zeros(tmp1.*tmp2);
+%         for l=1:tmp1(end)
+%             for m=1:tmp2(end)
+%                 for p=1:tmp1(end-1)
+%                     for q=1:tmp2(end-1)
+%                         C(:,:,q+(p-1)*tmp2(end-1),m+(l-1)*tmp2(end)) = ...
+%                             kron(C1(:,:,p,l), C2(:,:,q,m));
+%                     end
+%                 end
+%             end
+%         end
+% end
+% value = C;
 end
