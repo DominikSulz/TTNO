@@ -6,7 +6,7 @@ addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\hm-toolbox-master\hm
 addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\tensor_toolbox-master')
 
 %% initializations
-d = 2^2;           % number of particles
+d = 2^5;           % number of particles
 l = log(d)/log(2); % number of layers
 n = 2;             % physical dimension
 
@@ -15,17 +15,18 @@ n = 2;             % physical dimension
 A = cell(1,d);
 % tmp = rand(n,n);
 for jj=1:d
-    A{jj} = rand(n,n);     % matrix acting on each site
+%     A{jj} = rand(n,n);     % matrix acting on each site
 %     A{jj} = tmp;
+    A{jj} = ones(n,n);
 end
 
-% interaction matrix
+% interaction matrix (has hss_rank 1)
 tmp = ones(d,1);
 A_int = diag(2*tmp,0) - diag(tmp(1:d-1),-1) - diag(tmp(1:d-1),1);
 V = inv(A_int);
 
 % % interaction matrix 2
-% k = 5;
+% k = 4;
 % V = zeros(d,d);
 % for ii=1:k
 %     v = rand(d,1);
@@ -39,8 +40,9 @@ cl = 1:1:d;
 H = hss(V,'cluster',cl);
 
 %% construction of TTNO with help of HSS
+tic
 TTNO = TTNO_HSS_construct(H,A,l,l,n*ones(1,d),1:d);
-
+toc
 
 %% exact TTNO without using HSS structure
 tic

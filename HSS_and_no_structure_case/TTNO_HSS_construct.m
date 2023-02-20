@@ -6,12 +6,12 @@ I = I(:);
 
 if l==1 % leaf 
     tmp = A{1};
-    U = [I tmp(:)];
-    TTNO{1} = U;
+    Ui = [I tmp(:)];
+    TTNO{1} = Ui;
     
     tmp = A{2};
-    U = [I tmp(:)];
-    TTNO{2} = U;
+    Ui = [I tmp(:)];
+    TTNO{2} = Ui;
     
     if l ~= num_l 
         mat_C = zeros(4,3);
@@ -20,7 +20,7 @@ if l==1 % leaf
         mat_C(3,2) = H.Rr; % A2
         mat_C(4,3) = H.B12;
         TTNO{3} = eye(3,3);
-        TTNO{4} = mat2tens(mat_C.',[2 2 3],1:2,3);  
+        TTNO{4} = mat2tens(mat_C.',[2 2 3],3,1:2);   
         TTNO{4} = tensor(TTNO{4},[2 2 3]);
     else
         TTNO{3} = 1;
@@ -37,12 +37,16 @@ else % root tensor
     TTNO{1} = TTNO_HSS_construct(H.A11,A(1:s),l-1,num_l,n(1:s),pos(1:s));
     TTNO{2} = TTNO_HSS_construct(H.A22,A((s+1):len),l-1,num_l,n((s+1):len),pos((s+1):len));
     
-    mat_C = zeros();
+    mat_C = zeros(9,1);
     
+    mat_C(2) = H.B12; % A_i from left
+    mat_C(4) = H.B21; % A_i from right
     
+    mat_C(3) = 1; % A_i \otimes A_j from left
+    mat_C(7) = 1; % A_i \otimes A_j from right
     
-    mat_C = mat2tens(mat_C.',[2^(l-1)+2 2^(l-1)+2 1],3,1:2); 
-    TTNO{end} = tensor(mat_C,[2^(l-1)+2 2^(l-1)+2 1]);
+    mat_C = mat2tens(mat_C.',[3 3 1],3,1:2); 
+    TTNO{end} = tensor(mat_C,[3 3 1]);
     
 end
 
