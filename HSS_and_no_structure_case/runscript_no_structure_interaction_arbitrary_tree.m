@@ -49,9 +49,6 @@ TTNO = TTNO_no_structure_abitrary_tree(A,V,X,l,l,n*ones(d,1),1:d);
 toc 
 % TTNO = rounding(TTNO,tau);
 
-% reference 2
-TTNO2 = TTNO_no_structure(A,V,l,l,n*ones(d,1),1:d);
-
 %% exact TTNO
 B = cell(1,d);
 count = 1;

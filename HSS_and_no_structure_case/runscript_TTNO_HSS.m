@@ -6,7 +6,7 @@ addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\hm-toolbox-master\hm
 addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\tensor_toolbox-master')
 
 %% initializations
-d = 2^5;           % number of particles
+d = 2^2;           % number of particles
 l = log(d)/log(2); % number of layers
 n = 2;             % physical dimension
 
@@ -15,9 +15,9 @@ n = 2;             % physical dimension
 A = cell(1,d);
 % tmp = rand(n,n);
 for jj=1:d
-%     A{jj} = rand(n,n);     % matrix acting on each site
+    A{jj} = rand(n,n);     % matrix acting on each site
 %     A{jj} = tmp;
-    A{jj} = ones(n,n);
+%     A{jj} = ones(n,n);
 end
 
 % interaction matrix (has hss_rank 1)
