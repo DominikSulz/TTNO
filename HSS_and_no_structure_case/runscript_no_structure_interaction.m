@@ -6,7 +6,7 @@ addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\hm-toolbox-master\hm
 % addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\tensor_toolbox-master')
 
 %% initializations
-d = 2^2;           % number of particles
+d = 2^1;           % number of particles
 l = log(d)/log(2); % number of layers
 n = 2;            % physical dimension
 

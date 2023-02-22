@@ -34,8 +34,12 @@ mat_C(1,1) = 1; % identity
 Int = U * H.B12 * V';
 
 tmp = zeros(m1+2,m2+2);
-tmp(1,2) = 1;
-tmp(2,1) = 1;
+if l==1
+    
+else
+    tmp(1,2) = 1;
+    tmp(2,1) = 1;
+end
 tmp(3:end,3:end) = Int;
 mat_C(:,2) = tmp(:); 
 
@@ -56,9 +60,11 @@ end
 
 if l==num_l
     mat_C = mat2tens(mat_C(:,2).',[m1+2 m2+2 1],3,1:2);
+    TTNO{end-1} = 1;
     TTNO{end} = tensor(mat_C,[m1+2 m2+2 1]);
 else
     mat_C = mat2tens(mat_C.',[m1+2 m2+2 m1+m2+2],3,1:2);
+    TTNO{end-1} = eye(m1+m2+2,m1+m2+2);
     TTNO{end} = tensor(mat_C,[m1+2 m2+2 m1+m2+2]);
 end
 

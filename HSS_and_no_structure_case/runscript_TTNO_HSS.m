@@ -6,7 +6,7 @@ addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\hm-toolbox-master\hm
 addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\tensor_toolbox-master')
 
 %% initializations
-d = 2^2;           % number of particles
+d = 2^4;           % number of particles
 l = log(d)/log(2); % number of layers
 n = 2;             % physical dimension
 
@@ -54,6 +54,8 @@ tmp = TTNO;
 tmp{end} = -tmp{end};
 E = Add_TTN(TTNO_exact,tmp,tau);
 err = sqrt(abs(Mat0Mat0(E,E)))
+
+err_scaled = sqrt(abs(Mat0Mat0(E,E)))/sqrt(abs(Mat0Mat0(TTNO_exact,TTNO_exact)))
 
 
 % % exact TTNO by old construction
