@@ -6,7 +6,7 @@ addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\hm-toolbox-master\hm
 addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\tensor_toolbox-master')
 
 %% initializations
-d = 2^8;           % number of particles
+d = 2^5;           % number of particles
 l = log(d)/log(2); % number of layers
 n = 2;             % physical dimension
 
@@ -20,42 +20,67 @@ for jj=1:d
 %     A{jj} = ones(n,n);
 end
 
-% interaction matrix (has hss_rank 1)
+%% interaction matrix
+% interaction matrix 
 tmp = ones(d,1);
 A_int = diag(2*tmp,0) - diag(tmp(1:d-1),-1) - diag(tmp(1:d-1),1);
-V = inv(A_int);
+% A_int2 = diag(2*tmp,0) - diag(4*tmp(1:d-1),-1) - diag(3*tmp(1:d-1),1); 
+% V = inv(A_int) + inv(A_int2); 
+V = A_int;
+% V = inv(A_int);
+% symmetrischer Fall 
+V = 0.5*(V + V.');
 
-% % interaction matrix 2
-% k = 4;
-% V = zeros(d,d);
-% for ii=1:k
-%     v = rand(d,1);
-%     w = rand(d,1);
-%     V = V + v*w';
-% end
-% % V = 0.5*(V + V.'); % symmetrischer Fall
+% % interaction matrix 3
+% V = gallery('tridiag',d,-1,2,-1);
+% V = full(inv(V));
+
 
 %% HSS 
-cl = 1:1:d;
-H = hss(V,'cluster',cl);
+% first idea
+H = hss(V,'cluster',1:d);
+H = adjust_H(H);
+
+k = hssrank(H);
+% hss_generators_test(H)
+
+% second idea
+% H = hss('banded', V, 1, 1,'cluster',1:d);
+% k = hssrank(H);
+
+% third idea
+% H = hss('low-rank', U, V,'cluster', 1:d);
+% k = hssrank(H);
+% 
+% % 4th idea
+% H = hss('banded', V, 1, 1,'cluster', 1:d);
+% H = compress(H, eps);
+% k = hssrank(H);
+
+% k = k + 1;
 
 %% construction of TTNO with help of HSS
 tic
-TTNO = TTNO_HSS_construct_unstructured(H,A,l,l,n*ones(1,d),1:d);
+TTNO = TTNO_HSS_construct(H,A,l,l,n*ones(1,d),1:d,k);
 toc
 
-%% exact TTNO without using HSS structure
+%% exact TTNO without using HSS structure (reference solution)
 tic
 TTNO_exact = TTNO_no_structure(A,V,l,l,n*ones(d,1),1:d);
 toc
 
-% error check
+%% error check
 tmp = TTNO;
 tmp{end} = -tmp{end};
 E = Add_TTN(TTNO_exact,tmp,tau);
 err = sqrt(abs(Mat0Mat0(E,E)))
 
 err_scaled = sqrt(abs(Mat0Mat0(E,E)))/sqrt(abs(Mat0Mat0(TTNO_exact,TTNO_exact)))
+
+max_rk = max_rank(TTNO);
+
+
+
 
 
 % % exact TTNO by old construction

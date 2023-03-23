@@ -11,10 +11,10 @@ l = log(d)/log(2); % number of layers
 n = 2;             % physical dimension
 
 % tree structures
-[X,tau] = init_spin_all_dim_same_rank(4,1,d); % binary tree - needed for construct exact operator
+% [X,tau] = init_spin_all_dim_same_rank(4,1,d); % binary tree - needed for construct exact operator
 % [X,tau] = init_spin_all_dim_diff_rank_tree4(d); % tree with 4 subtrees (d=16)
 % [X,tau] = init_spin_all_dim_diff_rank_tree4_d32(d); % tree with 4 subtrees (d=32)
-% [X,tau] = init_spin_all_dim_diff_rank_TT(d); % TT 
+[X,tau] = init_spin_all_dim_diff_rank_TT(d); % TT 
 
 
 A = cell(1,d);

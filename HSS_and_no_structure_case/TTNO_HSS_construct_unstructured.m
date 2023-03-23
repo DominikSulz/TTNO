@@ -34,9 +34,7 @@ mat_C(1,1) = 1; % identity
 Int = U * H.B12 * V'; % subdiagonal block V(\tau_1,\tau_2)
 
 tmp = zeros(m1+2,m2+2);
-if l==1
-    
-else
+if l~=1
     tmp(1,2) = 1; % h_\tau_1
     tmp(2,1) = 1; % h_\tau_2
 end
