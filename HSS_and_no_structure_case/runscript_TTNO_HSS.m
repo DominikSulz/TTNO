@@ -1,12 +1,12 @@
 clear all; clc; close all;
 
 addpath('C:\Users\Dominik\Documents\MATLAB\Low rank approximations\TTNO')
-addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\hm-toolbox-master\hm-toolbox-master')
+addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\hm-toolbox-master')
 % addpath('C:\Users\Dominik\Documents\MATLAB\Low rank approximations\rank_adaptive_integrator_for_TTN')
 addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\tensor_toolbox-master')
 
 %% initializations
-d = 2^5;           % number of particles
+d = 2^3;           % number of particles
 l = log(d)/log(2); % number of layers
 n = 2;             % physical dimension
 
@@ -29,7 +29,7 @@ A_int = diag(2*tmp,0) - diag(tmp(1:d-1),-1) - diag(tmp(1:d-1),1);
 V = A_int;
 % V = inv(A_int);
 % symmetrischer Fall 
-V = 0.5*(V + V.');
+% V = 0.5*(V + V.');
 
 % % interaction matrix 3
 % V = gallery('tridiag',d,-1,2,-1);
@@ -61,7 +61,7 @@ k = hssrank(H);
 
 %% construction of TTNO with help of HSS
 tic
-TTNO = TTNO_HSS_construct(H,A,l,l,n*ones(1,d),1:d,k);
+TTNO = TTNO_HSS_construct(H,A,l,l,n*ones(1,d),1:d);
 toc
 
 %% exact TTNO without using HSS structure (reference solution)
@@ -77,7 +77,7 @@ err = sqrt(abs(Mat0Mat0(E,E)))
 
 err_scaled = sqrt(abs(Mat0Mat0(E,E)))/sqrt(abs(Mat0Mat0(TTNO_exact,TTNO_exact)))
 
-max_rk = max_rank(TTNO);
+max_rk = max_rank(TTNO)
 
 
 

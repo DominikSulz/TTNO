@@ -1,10 +1,10 @@
-function [TTNO] = TTNO_HSS_construct(H,A,l,num_l,n,pos,k)
-%% for now just copied - has to be adjusted
+function [TTNO] = TTNO_HSS_construct(H,A,l,num_l,n,pos)
+
 TTNO = cell(1,4);
 I = eye(n(1),n(1));
 I = I(:);
 
-if l==1 % leaf 
+if l==1 % leafs 
     tmp = A{1};
     Ui = [I tmp(:) tmp(:)];
     TTNO{1} = Ui;
@@ -16,8 +16,8 @@ else
     % recursion - build up the subtrees \tau_1 and \tau_2
     len = length(A);
     s = len/2;
-    TTNO{1} = TTNO_HSS_construct(H.A11,A(1:s),l-1,num_l,n(1:s),pos(1:s),k);
-    TTNO{2} = TTNO_HSS_construct(H.A22,A((s+1):len),l-1,num_l,n((s+1):len),pos((s+1):len),k);
+    TTNO{1} = TTNO_HSS_construct(H.A11,A(1:s),l-1,num_l,n(1:s),pos(1:s));
+    TTNO{2} = TTNO_HSS_construct(H.A22,A((s+1):len),l-1,num_l,n((s+1):len),pos((s+1):len));
 end
 
 %% connecting tensor
@@ -49,6 +49,7 @@ mat_C = zeros((m1+2)*(m2+2),min([m1+m2,ss2])+2); % \mat_{1:2}(C)
 mat_C(1,1) = 1; 
 
 %% single interaction 
+single = [];
 E = eye(m1+2,m2+2);
 u1 = zeros(m2+2,1);
 u1(1) = 1;
@@ -71,45 +72,12 @@ for ii=1:m2         % u_1*u_i^T, where i=3,...,2+k
 end
 
 if l ~= num_l 
-    
-    R = [H.Rl;H.Rr]
-    
-%     [tmp,~] = size([H.Rl;H.Rr]);
-%     if tmp > 2*ss
-%         if H.Rl == 0
-%             R = H.Rr
-%         elseif H.Rr == 0
-%             R = H.Rl
-%         end
-%     else
-%         R = [H.Rl;H.Rr]
-%     end
-    
-    
-%     %%% test -> this commented code would allow mat_C to have more colums
-% %     [u,s,v] = svd(R,'econ');
-%     [~,ss] = size(R);
-%     [rr,~] = size(mat_C);
-%     if ss>k
-%         mat_C(:,(end+1):(end+ss-k)) = zeros(rr,ss-k);
-%         k = ss;
-%     end
-%     hssrank(H)
-    mat_C(:,3:end) = single*R; 
-    
-    % this is the part where the code has problems. The rest of the code
-    % seems to work fine. Several things happen here:
-    % 1) either the R matrix has more columns than expected. By theory I would
-    % expect <= k columns. Quite often it has k+1 (or more). Typically I
-    % can't reduce the matrix R, as it has full rank with eigenvalues all 
-    % of modulus 1.
-    % 2) Even if I allow more columns in mat_C (which would still
-    % contradict or hypothesis), I get different problems. Sometimes the
-    % number of rows of R is different than excpected too. If I am at a
-    % n_i \times n_i subblock, then R should have n_i rows. Sometimes it
-    % has n_i-1 rows and the dimesions of single*R don't fit anymore.
+    R = [H.Rl;H.Rr];
+        
+    if isempty(single) == 0
+        mat_C(:,3:end) = single*R; 
+    end
 end
-
 
 %% double interaction
 tmp = zeros(m1+2,m2+2);
@@ -126,14 +94,9 @@ if l==num_l
     TTNO{end-1} = 1;
     TTNO{end} = tensor(mat_C,[m1+2 m2+2 1]);
 else
-%     [~,ss] = size(KU);
     mat_C = mat2tens(mat_C.',[m1+2 m2+2 min([m1+m2,ss2])+2],3,1:2);
-    TTNO{end-1} = eye(min(m1+m2,k)+2,min([m1+m2,ss2])+2);
+    TTNO{end-1} = eye(min(m1+m2,ss2)+2,min([m1+m2,ss2])+2);
     TTNO{end} = tensor(mat_C,[m1+2 m2+2 min([m1+m2,ss2])+2]);
-    % old
-%     mat_C = mat2tens(mat_C.',[m1+2 m2+2 min([m1+m2,k])+2],3,1:2);
-%     TTNO{end-1} = eye(min(m1+m2,k)+2,min([m1+m2,k])+2);
-%     TTNO{end} = tensor(mat_C,[m1+2 m2+2 min([m1+m2,k])+2]);
 end
 
 
