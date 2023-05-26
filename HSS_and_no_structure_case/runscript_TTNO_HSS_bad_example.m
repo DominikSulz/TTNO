@@ -2,12 +2,11 @@ clear all; clc; close all;
 
 addpath('C:\Users\Dominik\Documents\MATLAB\Low rank approximations\TTNO')
 addpath('C:\Users\Dominik\Documents\MATLAB\Low rank approximations\TTNO\HSS_and_no_structure_case')
+addpath('C:\Users\Dominik\Documents\MATLAB\Low rank approximations\TTNO\example_unitary_dynamics_spin')
 addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\hm-toolbox-master')
 addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\tensor_toolbox-master')
 
 %% initializations
-d = 2^8;           % number of particles
-l = log(d)/log(2); % number of layers
 n = 2;             % physical dimension
 
 sx=[0,1;1,0];      % Pauli Matrix \sigma_x
@@ -17,12 +16,14 @@ Delta = -2;
 Omega = 3;
 alpha = 1;
 
-hss_tol = [10^-2, 10^-3, 10^-4, 10^-5, 10^-6, 10^-7,...
-           10^-8, 10^-9, 10^-10, 10^-11, 10^-12, 10^-13, 10^-14];
+rk = [1 2 3 4 5 6 7 8 9];
 
-[X,tau] = init_spin_all_dim_same_rank(4,1,d); % initial data - needed for construct exact operator
-
-for kk=1:length(hss_tol)              
+for kk=1:length(rk)
+    d = 2^rk(kk);           % number of particles
+    l = log(d)/log(2); % number of layers
+    
+    [X,tau] = init_spin_all_dim_same_rank(4,1,d); % initial data - needed for construct exact operator
+    
     %% interaction matrix - single particle
     A_single = cell(1,d);
     for ii=1:d
@@ -33,17 +34,19 @@ for kk=1:length(hss_tol)
     %% interaction matrix - long-range interactions
     V_int = zeros(d,d);
     A_int = cell(1,d);
+    
+    f = @(x) 1/(1-cos(x));% 1/sin(x);
     for ii=1:d
         for jj=1:d
-            if ii ~= jj
-                V_int(ii,jj) = nu*(1/abs(ii-jj))^alpha;
-            end
+            V_int(ii,jj) = f(abs(ii-jj));
         end
         A_int{ii} = n_Pu;
     end
     
+    V_int = 0.5*(V_int+V_int');
+
+    
     %% HSS
-    hssoption('threshold',hss_tol(kk));
     H_single = hss(V_single,'cluster',1:d);
     H_single = adjust_H(H_single);
     
@@ -80,17 +83,17 @@ for kk=1:length(hss_tol)
     
     kk
 end
-hssoption('threshold',10^-12) % set all hss option values back to default
 
 % plot
 subplot(1,2,1)
-loglog(hss_tol,err_scaled,'Linewidth',2)
-xlabel('HSS tolerance','Fontsize',12)
+loglog(2.^rk,err_scaled,'Linewidth',2)
+xlabel('Number of particles','Fontsize',12)
 legend('Scaled error in Frobenius norm','Fontsize',12)
 
 subplot(1,2,2)
-semilogx(hss_tol,max_rk,'Linewidth',2)
+plot(2.^rk,max_rk,'Linewidth',2)
 hold on
-semilogx(hss_tol,ex_rk,'--','Linewidth',2)
-xlabel('HSS tolerance','Fontsize',12)
-legend('Maximal rank of the TTNO','hssrank + 2 + 1','Fontsize',12)
+plot(2.^rk,ex_rk,'--','Linewidth',2)
+plot(2.^rk,0.5*2.^rk + 3,':','Linewidth',2)
+xlabel('Number of particles','Fontsize',12)
+legend('Maximal rank of the TTNO','hssrank + 2 + 1','d/2 + 3','Fontsize',12)

@@ -11,15 +11,15 @@ n = 2;             % physical dimension
 sx=[0,1;1,0];      % Pauli Matrix \sigma_x
 n_Pu=[1,0;0,0];    % Projector onto the excited state Pu=(sz+id)/2;
 nu = 2;
-Delta = 2;
+Delta = -2;
 Omega = 3;
 alpha = 1;
 
-rk = [1 2 3 4 5 6 7];
+rk = [1 2 3 4 5 6 7 8 9];
 
 for kk=1:length(rk)
     d = 2^rk(kk);           % number of particles
-    l = log(d)/log(2); % number of layers
+    l = log(d)/log(2);      % number of layers
     
     [X,tau] = init_spin_all_dim_same_rank(4,1,d); % initial data - needed for construct exact operator
     
@@ -77,11 +77,22 @@ for kk=1:length(rk)
     
     ex_rk(kk) = hssrank(H_int) + 2 + 1; % +1 for the non interacting part
     
+    
+%     % extra check
+%     B = linearisation_long_range_unitary_full(d,sx,n_Pu,nu,Delta,Omega,alpha);
+%     TTNO_exact_test = make_operator(X,B,tau,n*ones(1,d));
+%     TTNO_exact_test = rounding(TTNO_exact_test,tau);
+%     tmp = TTNO_exact;
+%     tmp{end} = -tmp{end};
+%     E = Add_TTN(TTNO_exact_test,tmp,tau);
+%     sqrt(abs(Mat0Mat0(E,E)))
+
+    kk
 end
 
 % plot
 subplot(1,2,1)
-loglog(2.^rk,err_scaled,'Linewidth',2)
+semilogy(2.^rk,err_scaled,'Linewidth',2)
 xlabel('Number of particles','Fontsize',12)
 legend('Scaled error in Frobenius norm','Fontsize',12)
 

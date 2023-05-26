@@ -6,23 +6,24 @@ addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\hm-toolbox-master')
 addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\tensor_toolbox-master')
 
 %% initializations
+n = 2;             % physical dimension
 d = 2^8;           % number of particles
 l = log(d)/log(2); % number of layers
-n = 2;             % physical dimension
 
 sx=[0,1;1,0];      % Pauli Matrix \sigma_x
 n_Pu=[1,0;0,0];    % Projector onto the excited state Pu=(sz+id)/2;
 nu = 2;
 Delta = -2;
 Omega = 3;
-alpha = 1;
-
-hss_tol = [10^-2, 10^-3, 10^-4, 10^-5, 10^-6, 10^-7,...
-           10^-8, 10^-9, 10^-10, 10^-11, 10^-12, 10^-13, 10^-14];
 
 [X,tau] = init_spin_all_dim_same_rank(4,1,d); % initial data - needed for construct exact operator
 
-for kk=1:length(hss_tol)              
+alpha_save = [0 0.5 1 1.5 2 2.5 3 4 5 6 7 8 9];
+
+for kk=1:length(alpha_save)
+    
+    alpha = alpha_save(kk);
+    
     %% interaction matrix - single particle
     A_single = cell(1,d);
     for ii=1:d
@@ -43,7 +44,6 @@ for kk=1:length(hss_tol)
     end
     
     %% HSS
-    hssoption('threshold',hss_tol(kk));
     H_single = hss(V_single,'cluster',1:d);
     H_single = adjust_H(H_single);
     
@@ -78,19 +78,28 @@ for kk=1:length(hss_tol)
     
     ex_rk(kk) = hssrank(H_int) + 2 + 1; % +1 for the non interacting part
     
+    
+%     % extra check
+%     B = linearisation_long_range_unitary_full(d,sx,n_Pu,nu,Delta,Omega,alpha);
+%     TTNO_exact_test = make_operator(X,B,tau,n*ones(1,d));
+%     TTNO_exact_test = rounding(TTNO_exact_test,tau);
+%     tmp = TTNO_exact;
+%     tmp{end} = -tmp{end};
+%     E = Add_TTN(TTNO_exact_test,tmp,tau);
+%     sqrt(abs(Mat0Mat0(E,E)))
+
     kk
 end
-hssoption('threshold',10^-12) % set all hss option values back to default
 
 % plot
 subplot(1,2,1)
-loglog(hss_tol,err_scaled,'Linewidth',2)
-xlabel('HSS tolerance','Fontsize',12)
+semilogy(alpha_save,err_scaled,'Linewidth',2)
+xlabel('{\alpha}','Fontsize',12)
 legend('Scaled error in Frobenius norm','Fontsize',12)
 
 subplot(1,2,2)
-semilogx(hss_tol,max_rk,'Linewidth',2)
+plot(alpha_save,max_rk,'Linewidth',2)
 hold on
-semilogx(hss_tol,ex_rk,'--','Linewidth',2)
-xlabel('HSS tolerance','Fontsize',12)
+plot(alpha_save,ex_rk,'--','Linewidth',2)
+xlabel('{\alpha}','Fontsize',12)
 legend('Maximal rank of the TTNO','hssrank + 2 + 1','Fontsize',12)
