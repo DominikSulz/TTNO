@@ -86,7 +86,7 @@ end
 
 % plot
 subplot(1,2,1)
-loglog(2.^rk,err_scaled,'Linewidth',2)
+semilogy(2.^rk,err_scaled,'Linewidth',2)
 xlabel('Number of particles','Fontsize',12)
 legend('Scaled error in Frobenius norm','Fontsize',12)
 

@@ -74,8 +74,9 @@ end
 %% double interaction
 tmp = zeros(m1+2,m2+2);
 if l~=1 % give h_\tau_1 and h_\tau_2 one level up
-    tmp(1,2) = 1;
-    tmp(2,1) = 1;
+    tmp(1,2) = 1; 
+    % tmp(2,1) = 1; % deleted, as we dont give h_\tau_1 = A_i to the upper
+    %level twice
 end
 
 tmp(3:end,3:end) = H.B12; % subdiagonal block V(\tau_1,\tau_2)

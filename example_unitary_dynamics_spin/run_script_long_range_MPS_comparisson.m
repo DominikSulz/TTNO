@@ -8,76 +8,64 @@ addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\tensor_toolbox-maste
 % addpath('C:\Users\Dominik\Documents\MATLAB\Low rank approximations\rank_adaptive_integrator_for_TTN')
 
 % parameters of the model
-Omega = 0.4;
-Delta = -2;
-gamma = 1;
-alpha = 1;
+n = 2;             % physical dimension
 
-r_vec = [10 10 10 10 10 10 10 6 4]; 
+Delta = -2;
+Omega = 3;
+alpha = 1;
+nu = 2;
+
+r_vec = [10 10 10 10 10 10 10 6 4];
 
 % initialisations
 sx=[0,1;1,0];     %% Pauli Matrix x
 sy=[0,-1i;1i,0];  %% Pauli Matrix y
 sz=[1,0;0,-1];    %% Pauli Matrix z
-n=[1,0;0,0];      %% Projector onto the excited state Pu=(sz+id)/2;
+n_Pu=[1,0;0,0];    % Projector onto the excited state Pu=(sz+id)/2;
 id=[1,0;0,1];     %% Identity for the single spin
 J = [0,0;1,0];
 
 rk = [1 2 3 4 5 6 7 8 9];
+
 for kk=1:length(rk)
     d = 2^rk(kk);           % number of particles
     l = log(d)/log(2);      % number of layers
     
-    c_alpha=sum((1:1:d).^(-alpha));
-    nu = 2/c_alpha;
-    
     [X,tau] = init_spin_all_dim_same_rank(r_vec,2,d); % initial data - binary balanced tree
     [X_TT,tau_TT] = init_spin_all_dim_diff_rank_TT(d); % initial data - MPS
     
-     %% interaction matrix - single particle
+    %% interaction matrix - single particle
     A_single = cell(1,d);
     for ii=1:d
-        A_single{ii} = Omega*(-1i*kron(sx,id) + 1i*kron(id,sx.')) ...
-                     + Delta*(-1i*kron(n,id) + 1i*kron(id,n.')) ...
-                     + gamma*(kron(J,conj(J)) - 0.5*kron(J'*J,id) - 0.5*kron(id,(J'*J).'));        
+        A_single{ii} = Omega*sx + Delta*n_Pu;
     end
     V_single = eye(d,d);
     
     %% interaction matrix - long-range interactions
-    V_int1 = zeros(d,d);
-    A_int1 = cell(1,d);
-    V_int2 = zeros(d,d);
-    A_int2 = cell(1,d);
+    V_int = zeros(d,d);
+    A_int = cell(1,d);
     for ii=1:d
         for jj=1:d
             if ii ~= jj
-                V_int1(ii,jj) = -1i*nu * 1/abs(ii-jj)^alpha; % -1i*(nu/2) * 1/abs(ii-jj)^alpha;
-                V_int2(ii,jj) = 1i*nu * 1/abs(ii-jj)^alpha; % 1i*(nu/2) * 1/abs(ii-jj)^alpha;
+                V_int(ii,jj) = nu*(1/abs(ii-jj))^alpha;
             end
         end
-        A_int1{ii} = kron(n,id);
-        A_int2{ii} = kron(id,n.');
+        A_int{ii} = n_Pu;
     end
-
     
     
     %% HSS
     H_single = hss(V_single,'cluster',1:d);
     H_single = adjust_H(H_single);
     
-    H_int1 = hss(V_int1,'cluster',1:d);
-    H_int1 = adjust_H(H_int1);
-    H_int2 = hss(V_int2,'cluster',1:d);
-    H_int2 = adjust_H(H_int2);
+    H_int = hss(V_int,'cluster',1:d);
+    H_int = adjust_H(H_int);
     
     %% construction of TTNO with help of HSS
-    TTNO_single = TTNO_HSS_construct_single(H_single,A_single,l,l,4*ones(1,d),1:d);
-    TTNO_int1 = TTNO_HSS_construct(H_int1,A_int1,l,l,4*ones(1,d),1:d);
-    TTNO_int2 = TTNO_HSS_construct(H_int2,A_int2,l,l,4*ones(1,d),1:d);
+    TTNO_single = TTNO_HSS_construct_single(H_single,A_single,l,l,n*ones(1,d),1:d);
+    TTNO_int = TTNO_HSS_construct(H_int,A_int,l,l,n*ones(1,d),1:d);
     
-    TTNO = Add_operator_nonround(TTNO_single,TTNO_int1,tau);
-    TTNO = Add_operator_nonround(TTNO,TTNO_int2,tau);
-    
+    TTNO = Add_TTN(TTNO_single,TTNO_int,tau);
     TTNO = rounding(TTNO,tau);
     
     %% TTNO in TT representation
@@ -86,19 +74,12 @@ for kk=1:length(rk)
     cluster.topnode = 1;
     
     H_single_TT = hss(V_single,'cluster',cluster);
-    H_int1_TT = hss(V_int1,'cluster',cluster);
-    H_int1_TT = adjust_H(H_int1_TT);
-    H_int2_TT = hss(V_int2,'cluster',cluster);
-    H_int2_TT = adjust_H(H_int2_TT);
+    H_int_TT = hss(V_int,'cluster',cluster);
     
-    TTNO_TT_single = TTNO_HSS_construct_single_TT(H_single_TT,A_single,d-1,d-1,4*ones(1,d),1:d);
-    TTNO_TT_int1 = TTNO_HSS_construct_TT(H_int1_TT,A_int1,d-1,d-1,4*ones(1,d),1:d);
-    TTNO_TT_int2 = TTNO_HSS_construct_TT(H_int2_TT,A_int2,d-1,d-1,4*ones(1,d),1:d);
-%     
-    TTNO_TT = Add_operator_nonround(TTNO_TT_single,TTNO_TT_int1,tau_TT);
-    TTNO_TT = Add_operator_nonround(TTNO_TT,TTNO_TT_int2,tau_TT);
+    TTNO_TT_single = TTNO_HSS_construct_single_TT(H_single_TT,A_single,d-1,d-1,n*ones(1,d),1:d);
+    TTNO_TT_int = TTNO_HSS_construct_TT(H_int_TT,A_int,d-1,d-1,n*ones(1,d),1:d);
     
-    
+    TTNO_TT = Add_TTN(TTNO_TT_single,TTNO_TT_int,tau_TT);
     TTNO_TT = rounding(TTNO_TT,tau_TT);
     %     TTNO_TT = rounding(TTNO_TT,tau_TT);
     %     TTNO_TT = truncate(TTNO_TT,10^-10,100,2);
@@ -107,11 +88,8 @@ for kk=1:length(rk)
     max_rk(kk) = max_rank(TTNO);
     max_rk_TT(kk) = max_rank(TTNO_TT);
     
-    ex_rk(kk) = hssrank(H_int1) + hssrank(H_int2) + 4;  
-    % 4 = 2 + 1 + 1, first 2 comes from H_int1, which contains the
-    % identity. First 1 comes from H_int2, where we don't have an identity.
-    % Second 1 comes from the diagonal part
-    ex_rk_TT(kk) = hssrank(H_int1_TT) + hssrank(H_int2_TT) + 4;
+    ex_rk(kk) = hssrank(H_int) + 2 + 1;
+    ex_rk_TT(kk) = hssrank(H_int_TT) + 2 + 1;
     
     sum_rank(kk) = sum_ranks(TTNO);
     sum_rank_TT(kk) = sum_ranks(TTNO_TT);
@@ -167,39 +145,29 @@ end
 
 end
 
-% %% error check of MPS
-% % build up the full operator
-% B = cell(1,d);
-% for ii=1:d
-%     B{ii,ii} = Omega*(-1i*kron(sx,id) + 1i*kron(id,sx.')) ...
-%         + Delta*(-1i*kron(n,id) + 1i*kron(id,n.')) ...
-%         + gamma*(kron(J,conj(J)) - 0.5*kron(J'*J,id) - 0.5*kron(id,(J'*J).'));
-% end
-% count = d + 1;
-% for ii=1:d
-%     for jj=1:d
-%         if ii ~= jj
-%             B{count,ii} = 0.5* -1i*nu * 1/abs(ii-jj)^alpha *kron(n,id);
-%             B{count,jj} = kron(n,id);
-%             count = count + 1;
+%     %% error check of MPS
+%     % build up the full operator
+%     B = cell(1,d);
+%     for ii=1:d
+%         B{ii,ii} = Omega*sx + Delta*n_Pu;
+%     end
+%     count = d + 1;
+%     for ii=1:d
+%         for jj=1:d
+%             if ii ~= jj
+%                 B{count,ii} = 0.5*nu*(1/abs(ii-jj))^alpha * n_Pu;
+%                 B{count,jj} = n_Pu;
+%                 count = count + 1;
+%             end
 %         end
 %     end
-% end
-% for ii=1:d
-%     for jj=1:d
-%         if ii ~= jj
-%             B{count,ii} = 0.5* 1i*nu * 1/abs(ii-jj)^alpha * kron(id,n.');
-%             B{count,jj} = kron(id,n.');
-%             count = count + 1;
-%         end
-%     end
-% end
-% H_ex = make_operator(X_TT,B,tau_TT,4*ones(d,1));
-% H_ex = rounding(H_ex,tau_TT);
-% 
-% H_ex{end} = -H_ex{end};
-% D = Add_TTN(H_ex,TTNO_TT,tau_TT);
-% err = sqrt(abs(Mat0Mat0(D,D)))
+%     H_ex = make_operator(X_TT,B,tau_TT,2*ones(d,1));
+%     H_ex = rounding(H_ex,tau_TT);
+%
+%     H_ex{end} = -H_ex{end};
+%     D = Add_TTN(H_ex,TTNO_TT,tau_TT);
+%     err = sqrt(abs(Mat0Mat0(D,D)))
+
 
 % old code for TT construction
 % with hss code

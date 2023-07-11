@@ -5,7 +5,6 @@ addpath('C:\Users\Dominik\Documents\MATLAB\Low rank approximations\TTNO\HSS_and_
 addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\hm-toolbox-master')
 addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\tensor_toolbox-master')
 
-addpath('C:\Users\Dominik\Documents\MATLAB\Low rank approximations\rank_adaptive_integrator_for_TTN')
 
 % parameters of the model
 Omega = 0.4;
@@ -23,7 +22,7 @@ n=[1,0;0,0];      %% Projector onto the excited state Pu=(sz+id)/2;
 id=[1,0;0,1];     %% Identity for the single spin
 J = [0,0;1,0];
 
-rk = [8];
+rk = [1 2 3 4 5 6 7 8 9];
 
 for kk=1:length(rk)
     d = 2^rk(kk);           % number of particles
@@ -82,37 +81,67 @@ for kk=1:length(rk)
     TTNO = Add_operator_nonround(TTNO_single,TTNO_int1,tau);
     TTNO = Add_operator_nonround(TTNO,TTNO_int2,tau);
     
-    TTNO = truncate(TTNO,10^-14,100,2);
-    
+    TTNO = rounding(TTNO,tau);
+
     %% exact TTNO
-    B = linearisation_long_range_single(d,J,sx,n,nu,Delta,Omega,gamma,alpha);
-    TTNO_exact_single = make_operator(X,B,tau,4*ones(1,d));
+%     B = linearisation_long_range_single(d,J,sx,n,nu,Delta,Omega,gamma,alpha);
+%     TTNO_exact_single = make_operator(X,B,tau,4*ones(1,d)); 
+%     TTNO_exact_single = rounding(TTNO_exact_single,tau);
+    TTNO_exact_single = TTNO_construct_single(A_single,l,l,4*ones(1,d),1:d);
     
     TTNO_exact_int1 = TTNO_no_structure(A_int1,V_int1,l,l,4*ones(d,1),1:d);
     TTNO_exact_int2 = TTNO_no_structure(A_int2,V_int2,l,l,4*ones(d,1),1:d);
-    
-    TTNO_exact_single = truncate(TTNO_exact_single,10^-14,500,2);
-    TTNO_exact_int1 = truncate(TTNO_exact_int1,10^-14,500,2);
-    TTNO_exact_int2 = truncate(TTNO_exact_int2,10^-14,500,2);
 
     TTNO_exact = Add_operator_nonround(TTNO_exact_single,TTNO_exact_int1,tau);
     TTNO_exact = Add_operator_nonround(TTNO_exact,TTNO_exact_int2,tau);
+    
+    TTNO_exact = rounding(TTNO_exact,tau);
 
     
     %% error check
     tmp = TTNO;
     tmp{end} = -tmp{end};
     E = Add_TTN(TTNO_exact,tmp,tau);
-    err(kk) = sqrt(abs(Mat0Mat0(E,E)));
+%     err(kk) = sqrt(abs(Mat0Mat0(E,E)));
     
-    err_scaled(kk) = err(kk)/sqrt(abs(Mat0Mat0(TTNO_exact,TTNO_exact)));
+    % err_scaled(kk) = err(kk)/sqrt(abs(Mat0Mat0(TTNO_exact,TTNO_exact)));
+    
+    if kk==9 % to avoid overflow
+        E{end} = 10^(-50)*E{end};
+        err(kk) = sqrt(abs(Mat0Mat0(E,E)));
+        TTNO_exact{end} = 10^(-50)*TTNO_exact{end};
+        err_scaled(kk) = err(kk)/sqrt(abs(Mat0Mat0(TTNO_exact,TTNO_exact)));
+    else
+        err(kk) = sqrt(abs(Mat0Mat0(E,E)));
+        err_scaled(kk) = err(kk)/sqrt(abs(Mat0Mat0(TTNO_exact,TTNO_exact)));
+    end
     
     max_rk(kk) = max_rank(TTNO);
     
-    ex_rk(kk) = hssrank(H_int1) + 2 + hssrank(H_int2) + 2 + 1; 
+    ex_rk(kk) = hssrank(H_int1) + hssrank(H_int2) + 4;  
+    % 4 = 2 + 1 + 1, first 2 comes from H_int1, which contains the
+    % identity. First 1 comes from H_int2, where we don't have an identity.
+    % Second 1 comes from the diagonal part
     
     kk
     
+end
+
+% plot
+subplot(1,2,1)
+semilogy(2.^rk,err_scaled,'Linewidth',2)
+xlabel('Number of particles','Fontsize',12)
+legend('Scaled error in Frobenius norm','Fontsize',12)
+
+subplot(1,2,2)
+plot(2.^rk,max_rk,'Linewidth',2)
+hold on
+plot(2.^rk,ex_rk,'--','Linewidth',2)
+xlabel('Number of particles','Fontsize',12)
+legend('Maximal rank of the TTNO','hssrank \beta_1 + 2 + hssrank \beta_2 + 1 + 1','Fontsize',12)
+
+
+
 % %     % extra check
 %     B = linearisation_long_range(d,J,sx,n,nu,Delta,Omega,gamma,alpha);
 %     TTNO_exact_test = make_operator(X,B,tau,4*ones(1,d));
@@ -125,23 +154,6 @@ for kk=1:length(rk)
 %     B = linearisation_long_range_test(d,J,sx,n,nu,Delta,Omega,gamma,alpha);
 %     TTNO_exact_int1_test = make_operator(X,B,tau,4*ones(1,d));
 %     TTNO_exact_int1_test{end} = 0.5*TTNO_exact_int1_test{end}; 
-    
-end
-
-% plot
-subplot(1,2,1)
-loglog(2.^rk,err_scaled,'Linewidth',2)
-xlabel('Number of particles','Fontsize',12)
-legend('Scaled error in Frobenius norm','Fontsize',12)
-
-subplot(1,2,2)
-plot(2.^rk,max_rk,'Linewidth',2)
-hold on
-plot(2.^rk,ex_rk,'--','Linewidth',2)
-xlabel('Number of particles','Fontsize',12)
-legend('Maximal rank of the TTNO','hssrank \beta_1 + 2 + hssrank \beta_2 + 2 + 1','Fontsize',12)
-
-
 
 
 % %%% check individual error

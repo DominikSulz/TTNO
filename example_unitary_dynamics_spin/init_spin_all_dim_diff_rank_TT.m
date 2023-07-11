@@ -16,9 +16,11 @@ C = zeros(2,2);
 C(1) = 1;
 Y{end} = tensor(C,[2 2 1]);
 
-C = zeros(2,4,2);
-C(1) = 1;
-Y{2}{end} = tensor(C,[2 4 2]);
+if d>2
+    C = zeros(2,4,2);
+    C(1) = 1;
+    Y{2}{end} = tensor(C,[2 4 2]);
+end
 
 Y = orth_tree(Y);
 

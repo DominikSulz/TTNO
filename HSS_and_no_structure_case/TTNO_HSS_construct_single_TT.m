@@ -26,7 +26,7 @@ end
 mat_C = zeros(9,3);
 mat_C(1,1) = 1; % identity
 mat_C(2,2) = 1; % left part
-mat_C(3,2) = 1; % right part
+mat_C(4,2) = 1; % right part % davor (3,2)
 
 if l==num_l
     mat_C = mat2tens(mat_C(:,2).',[3 3 1],3,1:2);
