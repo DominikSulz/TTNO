@@ -15,7 +15,7 @@ Delta = -2;
 Omega = 3;
 alpha = 1;
 
-rk = [1 2 3 4 5 6 7 8 9];
+rk = [3 4 5 6 7 8 9];
 
 for kk=1:length(rk)
     d = 2^rk(kk);           % number of particles
@@ -43,6 +43,7 @@ for kk=1:length(rk)
     end
     
     %% HSS
+    hssoption('threshold',10^-4);
     H_single = hss(V_single,'cluster',1:d);
     H_single = adjust_H(H_single);
     
@@ -59,8 +60,10 @@ for kk=1:length(rk)
     %% exact TTNO
     B = linearisation_long_range_unitary(d,sx,n_Pu,nu,Delta,Omega,alpha);
     TTNO_exact_single = make_operator(X,B,tau,n*ones(1,d));
+    TTNO_exact_single = rounding(TTNO_exact_single,tau);
     
     TTNO_exact_int = TTNO_no_structure(A_int,V_int,l,l,n*ones(d,1),1:d);
+    TTNO_exact_int = rounding(TTNO_exact_int,tau);
     
     TTNO_exact = Add_TTN(TTNO_exact_single,TTNO_exact_int,tau);
     
@@ -89,6 +92,7 @@ for kk=1:length(rk)
 
     kk
 end
+hssoption('threshold',10^-12);
 
 % plot
 subplot(1,2,1)
@@ -99,6 +103,7 @@ legend('Scaled error in Frobenius norm','Fontsize',12)
 subplot(1,2,2)
 plot(2.^rk,max_rk,'Linewidth',2)
 hold on
-plot(2.^rk,ex_rk,'--','Linewidth',2)
+% plot(2.^rk,ex_rk,'--','Linewidth',2)
 xlabel('Number of particles','Fontsize',12)
-legend('Maximal rank of the TTNO','hssrank + 2 + 1','Fontsize',12)
+% legend('Maximal rank of the TTNO','hssrank + 2 + 1','Fontsize',12)
+legend('Maximal rank of the TTNO')

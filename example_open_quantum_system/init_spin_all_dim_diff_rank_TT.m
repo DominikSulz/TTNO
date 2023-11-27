@@ -4,22 +4,22 @@ function [Y,tau] = init_spin_all_dim_diff_rank_TT(d)
 [tau,Y] = create_TT(d);
 
 for k=1:d
-    U = [1;0];
-    for l=1:1
-        U = [U ones(2,1)];
+    U = [1;0;0;0];
+    for l=1:3
+        U = [U ones(4,1)];
     end
     Y = set_leaf_TT(Y,U,k,d);
 end
 Y{end-1} = 1;
 
-C = zeros(2,2);
+C = zeros(4,4);
 C(1) = 1;
-Y{end} = tensor(C,[2 2 1]);
+Y{end} = tensor(C,[4 4 1]);
 
 if d~=2
-    C = zeros(2,4,2);
+    C = zeros(4,4,4);
     C(1) = 1;
-    Y{2}{end} = tensor(C,[2 4 2]);
+    Y{2}{end} = tensor(C,[4 4 4]);
 end
 
 Y = orth_tree(Y);
@@ -47,14 +47,14 @@ function [Z] = set_leaf_TT(Y,S,k,d)
 Z = Y;
 if d==2 && k<=2 
     Z{k} = S;
-    C = zeros(2,2,4);
+    C = zeros(4,4,4);
     C(1) = 1;
-    Z{end} = tensor(C,[2 2 4]);
+    Z{end} = tensor(C,[4 4 4]);
     Z{end-1} = eye(4,4);
 elseif k==1 && d>=3
-    C = zeros(2,4,4);
+    C = zeros(4,4,4);
     C(1) = 1;
-    Z{end} = tensor(C,[2 4 4]);
+    Z{end} = tensor(C,[4 4 4]);
     Z{end-1} = eye(4,4);
     Z{1} = S;
 else

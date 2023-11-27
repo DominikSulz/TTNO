@@ -15,7 +15,7 @@ Omega = 3;
 alpha = 1;
 nu = 2;
 
-r_vec = [10 10 10 10 10 10 10 6 4];
+r_vec = [4 4 4 4 4 4 4 4 4];
 
 % initialisations
 sx=[0,1;1,0];     %% Pauli Matrix x
@@ -25,7 +25,7 @@ n_Pu=[1,0;0,0];    % Projector onto the excited state Pu=(sz+id)/2;
 id=[1,0;0,1];     %% Identity for the single spin
 J = [0,0;1,0];
 
-rk = [1 2 3 4 5 6 7 8 9];
+rk = [1 2 3 4 5 6 7];
 
 for kk=1:length(rk)
     d = 2^rk(kk);           % number of particles
@@ -88,11 +88,23 @@ for kk=1:length(rk)
     max_rk(kk) = max_rank(TTNO);
     max_rk_TT(kk) = max_rank(TTNO_TT);
     
-    ex_rk(kk) = hssrank(H_int) + 2 + 1;
-    ex_rk_TT(kk) = hssrank(H_int_TT) + 2 + 1;
+%     % predicted ranks
+%     max_rk_ex(kk) = hssrank(H_int) + 3;
+%     max_rk_TT_ex(kk) = hssrank(H_int_TT) + 3;
+%     
+     % memory
+    S = whos('TTNO');
+    mem(kk) = S.bytes;
+    S = whos('TTNO_TT');
+    mem_TT(kk) = S.bytes;
     
-    sum_rank(kk) = sum_ranks(TTNO);
-    sum_rank_TT(kk) = sum_ranks(TTNO_TT);
+    % application
+    tmp1 = apply_operator_nonglobal(X,TTNO,d);
+    S = whos('tmp1');
+    mem_app(kk) = S.bytes;
+    tmp2 = apply_operator_nonglobal(X_TT,TTNO_TT,d);
+    S = whos('tmp2');
+    mem_app_TT(kk) = S.bytes;
     
     kk
     
@@ -104,18 +116,26 @@ subplot(1,2,1)
 plot(2.^rk,max_rk,'Linewidth',2)
 hold on
 plot(2.^rk,max_rk_TT,'--','Linewidth',2)
-plot(2.^rk,ex_rk,'-.','Linewidth',2)
-plot(2.^rk,ex_rk_TT,':','Linewidth',2)
+% plot(2.^rk,max_rk_ex,'--','Linewidth',2)
+% plot(2.^rk,max_rk_TT_ex,'--','Linewidth',2)
 xlabel('Number of particles','Fontsize',12)
 legend('Maximal rank of the TTNO binary tree','Maximal rank of the TTNO TT',...
-    'Expected rank binary tree','Expected rank TT','Fontsize',12)
+'Fontsize',12)
 
 subplot(1,2,2)
-plot(2.^rk,sum_rank,'Linewidth',2)
+plot(2.^rk,mem,'Linewidth',2)
 hold on
-plot(2.^rk,sum_rank_TT,'--','Linewidth',2)
+plot(2.^rk,mem_TT,'--','Linewidth',2)
 xlabel('Number of particles','Fontsize',12)
-legend('Summed ranks of the TTNO binary tree','Summed ranks of the TTNO TT'...
+legend('memory TTNO binary tree','Memory TTNO TT'...
+      ,'Fontsize',12)
+  
+figure(2)
+plot(2.^rk,mem_app,'Linewidth',2)
+hold on
+plot(2.^rk,mem_app_TT,'--','Linewidth',2)
+xlabel('Number of particles','Fontsize',12)
+legend('Memory application TTNO binary tree','Memory application TTNO TT'...
       ,'Fontsize',12)
 
 

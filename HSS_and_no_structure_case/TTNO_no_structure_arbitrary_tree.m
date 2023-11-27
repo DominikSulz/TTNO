@@ -1,4 +1,4 @@
-function [TTNO] = TTNO_no_structure_abitrary_tree(A,V,X,l,num_l,n,pos)
+function [TTNO] = TTNO_no_structure_arbitrary_tree(A,V,X,l,num_l,n,pos)
 % This code works for long-range operators of the form
 % \sum_i<j A^(i)A^(j)
 
@@ -13,7 +13,7 @@ for kk=1:m
     if iscell(X{kk}) == 1
         count_old = count;
         count = count + count_leaves(X{kk}) - 1;
-        TTNO{kk} = TTNO_no_structure_abitrary_tree(A(count_old:count),V,X{kk},l-1,num_l,n(count_old:count),pos(count_old:count));
+        TTNO{kk} = TTNO_no_structure_arbitrary_tree(A(count_old:count),V,X{kk},l-1,num_l,n(count_old:count),pos(count_old:count));
         
         count = count + 1;
     else % leaf

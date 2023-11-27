@@ -1,9 +1,9 @@
-function [Y] = rounding(A,tau)
+function [Y] = rounding2(A,tau)
 Y = A;
 m = length(A) - 2;
 for i=1:m
     if 1 == iscell(A{i}) % A{i} is a TTN
-        dum = rounding(A{i},tau{i});
+        dum = rounding2(A{i},tau{i});
         [Y{i},Ri] = orth_core(dum);        
         Y{end} = ttm(Y{end},Ri,i); % orthonormalize the core
     else % if we are at a basis matrix
@@ -11,7 +11,27 @@ for i=1:m
         Ri = S*V';             
 %         [Qi,Ri] = qr(A{i},0);     % when truncating its better to use
 %         svd, as we want the maximum eigenvalues
-        r_tilde = rank(Ri);
+        
+        [s1,s2] = size(S);
+        ss = min(s1,s2);
+        tol_S = eps;%*norm(S,'Fro'); %Änderung: davor gar nicht 
+        
+        S_diag = diag(S);
+        rk = [];
+        for j=1:ss
+            tmp = sqrt(sum(S_diag(j:ss).^2));
+            if tmp < tol_S % zuvor tol_S/m
+                rk = j-1;
+                break
+            end
+        end
+        if 1==isempty(rk)
+            rk = ss;
+        end
+        rk = max(rk,2);
+        rk = min(rk,100);
+        r_tilde = rk;
+        
         if r_tilde ~= 1
             Qi = Qi(:,1:r_tilde);
             Ri = Ri(1:r_tilde,:);
@@ -33,9 +53,29 @@ Mat = double(tenmat(T{end},m+1,1:m));
 [Mat,S,V] = svd(Mat.','econ'); % davor ohne econ
 
 R = S*V';
-% [Mat,R] = qr(Mat.',0);
 s = size(T{end});
-rC = rank(R);
+
+[s1,s2] = size(S);
+ss = min(s1,s2);
+tol_S = eps;%*norm(S,'Fro'); %Änderung: davor gar nicht
+
+S_diag = diag(S);
+rk = [];
+for j=1:ss
+    tmp = sqrt(sum(S_diag(j:ss).^2));
+    if tmp < tol_S % zuvor tol_S/m
+        rk = j-1;
+        break
+    end
+end
+if 1==isempty(rk)
+    rk = ss;
+end
+rk = max(rk,2);
+rk = min(rk,100);
+rC = rk;
+% 
+% rC = rank(R);
 
 if rC ~= 1
     Mat = Mat(:,1:rC);

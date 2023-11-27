@@ -11,9 +11,9 @@ addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\tensor_toolbox-maste
 Omega = 0.4;
 Delta = -2;
 gamma = 1;
-alpha = 1;
+alpha = 0.5;
 
-r_vec = [10 10 10 10 10 10 10 6 4]; 
+r_vec = [4 4 4 4 4 4 4 4 4]; 
 
 % initialisations
 sx=[0,1;1,0];     %% Pauli Matrix x
@@ -23,15 +23,16 @@ n=[1,0;0,0];      %% Projector onto the excited state Pu=(sz+id)/2;
 id=[1,0;0,1];     %% Identity for the single spin
 J = [0,0;1,0];
 
-rk = [1 2 3 4 5 6 7 8 9];
+rk = [1 2 3 4 5 6 7 8];
 for kk=1:length(rk)
     d = 2^rk(kk);           % number of particles
     l = log(d)/log(2);      % number of layers
     
     c_alpha=sum((1:1:d).^(-alpha));
-    nu = 2/c_alpha;
+    nu = 0.5/c_alpha; % 2/c_alpha; % 0.5/c_alpha; paper with Federico
     
-    [X,tau] = init_spin_all_dim_same_rank(r_vec,2,d); % initial data - binary balanced tree
+    [X,tau] = init_diss_all_dim_diff_rank(r_vec,2,d); % initial data - binary balanced tree
+%     X = truncate(X,10^-12,4,4); % make it rank 4
     [X_TT,tau_TT] = init_spin_all_dim_diff_rank_TT(d); % initial data - MPS
     
      %% interaction matrix - single particle
@@ -60,7 +61,6 @@ for kk=1:length(rk)
     end
 
     
-    
     %% HSS
     H_single = hss(V_single,'cluster',1:d);
     H_single = adjust_H(H_single);
@@ -72,15 +72,40 @@ for kk=1:length(rk)
     
     %% construction of TTNO with help of HSS
     TTNO_single = TTNO_HSS_construct_single(H_single,A_single,l,l,4*ones(1,d),1:d);
+%     TTNO_single = rounding(TTNO_single,tau);
     TTNO_int1 = TTNO_HSS_construct(H_int1,A_int1,l,l,4*ones(1,d),1:d);
+%     TTNO_int1 = rounding(TTNO_int1,tau);
     TTNO_int2 = TTNO_HSS_construct(H_int2,A_int2,l,l,4*ones(1,d),1:d);
+%     TTNO_int2 = rounding(TTNO_int2,tau);
     
     TTNO = Add_operator_nonround(TTNO_single,TTNO_int1,tau);
+%     TTNO = rounding(TTNO,tau);
     TTNO = Add_operator_nonround(TTNO,TTNO_int2,tau);
     
-    TTNO = rounding(TTNO,tau);
+%     TTNO = Add_TTN(TTNO_single,TTNO_int1,tau);
+%     TTNO = Add_TTN(TTNO,TTNO_int2,tau);
     
-    %% TTNO in TT representation
+    
+%     tmp = rounding(TTNO,tau);
+%     tmp{end} = - tmp{end};
+%     E = Add_operator_nonround(TTNO,tmp,tau);
+%     err = Mat0Mat0(E,E)
+%     err = Mat0Mat0(E,E)/Mat0Mat0(TTNO,TTNO)
+%
+% %     %%%
+%     test = TTNO;
+%     test{end} = -test{end};
+% %     TTNO{end} = (1/Mat0Mat0(TTNO,TTNO))*TTNO{end};
+    TTNO = rounding(TTNO,tau);
+% %     TTNO = rounding2(TTNO,tau);
+% %       TTNO = rounding_root2leaf(TTNO,tau);
+%     TTNO = truncate(TTNO,10^-14,200,2);
+%     %%%
+%     E = Add_operator_nonround(TTNO,test,tau);
+%     Mat0Mat0(E,E)
+%     Mat0Mat0(E,E)/Mat0Mat0(TTNO,TTNO)
+
+%% TTNO in TT representation
     cluster = hss();
     cluster = cluster_rec_HSS(cluster,d);
     cluster.topnode = 1;
@@ -92,16 +117,41 @@ for kk=1:length(rk)
     H_int2_TT = adjust_H(H_int2_TT);
     
     TTNO_TT_single = TTNO_HSS_construct_single_TT(H_single_TT,A_single,d-1,d-1,4*ones(1,d),1:d);
+%     TTNO_TT_single = rounding(TTNO_TT_single,tau_TT);
     TTNO_TT_int1 = TTNO_HSS_construct_TT(H_int1_TT,A_int1,d-1,d-1,4*ones(1,d),1:d);
+%     TTNO_TT_int1 = rounding(TTNO_TT_int1,tau_TT);
     TTNO_TT_int2 = TTNO_HSS_construct_TT(H_int2_TT,A_int2,d-1,d-1,4*ones(1,d),1:d);
-%     
+%     TTNO_TT_int2 = rounding(TTNO_TT_int2,tau_TT);
+    
     TTNO_TT = Add_operator_nonround(TTNO_TT_single,TTNO_TT_int1,tau_TT);
+%     TTNO_TT = rounding2(TTNO_TT,tau_TT);
     TTNO_TT = Add_operator_nonround(TTNO_TT,TTNO_TT_int2,tau_TT);
     
+%     TTNO_TT = Add_TTN(TTNO_TT_single,TTNO_TT_int1,tau_TT);
+% %     TTNO_TT = rounding2(TTNO_TT,tau_TT);
+%     TTNO_TT = Add_TTN(TTNO_TT,TTNO_TT_int2,tau_TT);
     
+%     tmp_TT = TTNO_TT;
+    
+%     tmp_TT = rounding(TTNO_TT,tau_TT);
+%     tmp_TT{end} = - tmp_TT{end};
+%     E_TT = Add_operator_nonround(TTNO_TT,tmp_TT,tau_TT);
+%     err_TT = Mat0Mat0(E_TT,E_TT)
+%     err_TT = Mat0Mat0(E_TT,E_TT)/Mat0Mat0(TTNO_TT,TTNO_TT)
+   
+%
+% % %     %%%
+%     test_TT = TTNO_TT;
+%     test_TT{end} = -test_TT{end};
+%     TTNO_TT{end} = (1/Mat0Mat0(TTNO_TT,TTNO_TT))*TTNO_TT{end};
     TTNO_TT = rounding(TTNO_TT,tau_TT);
-    %     TTNO_TT = rounding(TTNO_TT,tau_TT);
-    %     TTNO_TT = truncate(TTNO_TT,10^-10,100,2);
+% %     TTNO_TT = rounding2(TTNO_TT,tau_TT);
+% %     TTNO_TT = rounding_root2leaf(TTNO_TT,tau_TT);
+%     TTNO_TT = truncate(TTNO_TT,10^-14,200,2);
+%     %%%
+%     E = Add_operator_nonround(TTNO_TT,test_TT,tau_TT);
+%     Mat0Mat0(E,E)
+%     Mat0Mat0(E,E)/Mat0Mat0(TTNO_TT,TTNO_TT)
     
     %% max ranks
     max_rk(kk) = max_rank(TTNO);
@@ -113,8 +163,37 @@ for kk=1:length(rk)
     % Second 1 comes from the diagonal part
     ex_rk_TT(kk) = hssrank(H_int1_TT) + hssrank(H_int2_TT) + 4;
     
-    sum_rank(kk) = sum_ranks(TTNO);
-    sum_rank_TT(kk) = sum_ranks(TTNO_TT);
+%     % summend ranks
+%     sum_rank(kk) = sum_ranks(TTNO);
+%     sum_rank_TT(kk) = sum_ranks(TTNO_TT);
+    
+    % memory
+    S = whos('TTNO');
+    mem(kk) = S.bytes;
+    S = whos('TTNO_TT');
+    mem_TT(kk) = S.bytes;
+    
+    % application
+    tmp1 = apply_operator_nonglobal(X,TTNO,d);
+    S = whos('tmp1');
+    mem_app(kk) = S.bytes;
+    tmp2 = apply_operator_nonglobal(X_TT,TTNO_TT,d);
+    S = whos('tmp2');
+    mem_app_TT(kk) = S.bytes;
+    
+%     % free parameters
+%     free_p(kk) = count_free_parameter(TTNO);
+%     free_p_TT(kk) = count_free_parameter(TTNO_TT);
+
+    % product ranks
+    [sum_rkp,N] = prod_ranks(TTNO);
+    prod_rk(kk) = sum_rkp/N;
+    [sum_rkp_TT,N_TT] = prod_ranks(TTNO_TT);
+    prod_rk_TT(kk) = sum_rkp_TT/N_TT;
+    
+    % summend ranks
+    sum_rk(kk) = sum_ranks(TTNO);
+    sum_rk_TT(kk) = sum_ranks(TTNO_TT);
     
     kk
     
@@ -130,17 +209,47 @@ plot(2.^rk,ex_rk,'-.','Linewidth',2)
 plot(2.^rk,ex_rk_TT,':','Linewidth',2)
 xlabel('Number of particles','Fontsize',12)
 legend('Maximal rank of the TTNO binary tree','Maximal rank of the TTNO TT',...
-    'Expected rank binary tree','Expected rank TT','Fontsize',12)
+    'Fontsize',12)
 
 subplot(1,2,2)
-plot(2.^rk,sum_rank,'Linewidth',2)
+plot(2.^rk,mem,'Linewidth',2)
 hold on
-plot(2.^rk,sum_rank_TT,'--','Linewidth',2)
+plot(2.^rk,mem_TT,'--','Linewidth',2)
 xlabel('Number of particles','Fontsize',12)
-legend('Summed ranks of the TTNO binary tree','Summed ranks of the TTNO TT'...
+legend('Memory in bytes TTNO binary tree','Memory in bytes TTNO TT'...
       ,'Fontsize',12)
 
+% figure(2)
+% plot(2.^rk,free_p,'Linewidth',2)
+% hold on
+% plot(2.^rk,free_p_TT,'--','Linewidth',2)
+% xlabel('Number of particles','Fontsize',12)
+% legend('Free paramters TTNO binary tree','Free paramters TTNO TT'...
+%       ,'Fontsize',12)
 
+figure(2)
+plot(2.^rk,mem_app,'Linewidth',2)
+hold on
+plot(2.^rk,mem_app_TT,'--','Linewidth',2)
+xlabel('Number of particles','Fontsize',12)
+legend('Memory application TTNO binary tree','Memory application TTNO TT'...
+      ,'Fontsize',12)
+  
+figure(3)
+plot(2.^rk,prod_rk,'Linewidth',2)
+hold on
+plot(2.^rk,prod_rk_TT,'--','Linewidth',2)
+xlabel('Number of particles','Fontsize',12)
+legend('Averaged product ranks TTNO binary tree','Averaged product ranks TTNO TT'...
+      ,'Fontsize',12)
+  
+figure(4)
+plot(2.^rk,sum_rk,'Linewidth',2)
+hold on
+plot(2.^rk,sum_rk_TT,'--','Linewidth',2)
+xlabel('Number of particles','Fontsize',12)
+legend('Summend ranks TTNO binary tree','Summed ranks TTNO TT'...
+      ,'Fontsize',12)
 
 function[cluster] = cluster_rec_HSS(cluster,d)
 
