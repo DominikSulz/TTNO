@@ -11,7 +11,7 @@ addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\tensor_toolbox-maste
 Omega = 0.4;
 Delta = -2;
 gamma = 1;
-alpha = 0.5;
+alpha = 1;
 
 r_vec = [4 4 4 4 4 4 4 4 4]; 
 
@@ -23,13 +23,13 @@ n=[1,0;0,0];      %% Projector onto the excited state Pu=(sz+id)/2;
 id=[1,0;0,1];     %% Identity for the single spin
 J = [0,0;1,0];
 
-rk = [1 2 3 4 5 6 7 8];
+rk = [1 2 3 4 5 6 7 8 9];
 for kk=1:length(rk)
     d = 2^rk(kk);           % number of particles
     l = log(d)/log(2);      % number of layers
     
     c_alpha=sum((1:1:d).^(-alpha));
-    nu = 0.5/c_alpha; % 2/c_alpha; % 0.5/c_alpha; paper with Federico
+    nu = 2/c_alpha; % 2/c_alpha; % 0.5/c_alpha; paper with Federico
     
     [X,tau] = init_diss_all_dim_diff_rank(r_vec,2,d); % initial data - binary balanced tree
 %     X = truncate(X,10^-12,4,4); % make it rank 4
@@ -205,51 +205,55 @@ subplot(1,2,1)
 plot(2.^rk,max_rk,'Linewidth',2)
 hold on
 plot(2.^rk,max_rk_TT,'--','Linewidth',2)
-plot(2.^rk,ex_rk,'-.','Linewidth',2)
-plot(2.^rk,ex_rk_TT,':','Linewidth',2)
-xlabel('Number of particles','Fontsize',12)
-legend('Maximal rank of the TTNO binary tree','Maximal rank of the TTNO TT',...
-    'Fontsize',12)
+% plot(2.^rk,ex_rk,'-.','Linewidth',2)
+% plot(2.^rk,ex_rk_TT,':','Linewidth',2)
+xlabel('Number of particles','Fontsize',14)
+legend('Representation rank of the TTNO binary tree','Representation rank of the TTNO TT',...
+'Fontsize',14)
+
 
 subplot(1,2,2)
+yyaxis left
 plot(2.^rk,mem,'Linewidth',2)
 hold on
-plot(2.^rk,mem_TT,'--','Linewidth',2)
-xlabel('Number of particles','Fontsize',12)
-legend('Memory in bytes TTNO binary tree','Memory in bytes TTNO TT'...
-      ,'Fontsize',12)
+plot(2.^rk,mem_TT,'r--','Linewidth',2)
+ylabel('Memory in bytes')
+ax = gca;                           % Get current axes
+ax.YColor = 'k';
+yyaxis right
+ax = gca;                           % Get current axes
+ax.YColor = 'k';
+plot(2.^rk,mem./mem_TT,'kx:','Linewidth',2)
+xlabel('Number of particles','Fontsize',14)
+xlim([2^rk(1) 2^rk(end)])
+ylabel('Memory ratio')
+legend('Memory TTNO binary tree in bytes','Memory TTNO TT in bytes',...
+      'Ratio memory HT / memory TT','Fontsize',14)
+
 
 % figure(2)
-% plot(2.^rk,free_p,'Linewidth',2)
+% plot(2.^rk,mem_app,'Linewidth',2)
 % hold on
-% plot(2.^rk,free_p_TT,'--','Linewidth',2)
+% plot(2.^rk,mem_app_TT,'--','Linewidth',2)
 % xlabel('Number of particles','Fontsize',12)
-% legend('Free paramters TTNO binary tree','Free paramters TTNO TT'...
+% legend('Memory application TTNO binary tree','Memory application TTNO TT'...
 %       ,'Fontsize',12)
-
-figure(2)
-plot(2.^rk,mem_app,'Linewidth',2)
-hold on
-plot(2.^rk,mem_app_TT,'--','Linewidth',2)
-xlabel('Number of particles','Fontsize',12)
-legend('Memory application TTNO binary tree','Memory application TTNO TT'...
-      ,'Fontsize',12)
   
-figure(3)
-plot(2.^rk,prod_rk,'Linewidth',2)
-hold on
-plot(2.^rk,prod_rk_TT,'--','Linewidth',2)
-xlabel('Number of particles','Fontsize',12)
-legend('Averaged product ranks TTNO binary tree','Averaged product ranks TTNO TT'...
-      ,'Fontsize',12)
+% figure(3)
+% plot(2.^rk,prod_rk,'Linewidth',2)
+% hold on
+% plot(2.^rk,prod_rk_TT,'--','Linewidth',2)
+% xlabel('Number of particles','Fontsize',12)
+% legend('Averaged product ranks TTNO binary tree','Averaged product ranks TTNO TT'...
+%       ,'Fontsize',12)
   
-figure(4)
-plot(2.^rk,sum_rk,'Linewidth',2)
-hold on
-plot(2.^rk,sum_rk_TT,'--','Linewidth',2)
-xlabel('Number of particles','Fontsize',12)
-legend('Summend ranks TTNO binary tree','Summed ranks TTNO TT'...
-      ,'Fontsize',12)
+% figure(4)
+% plot(2.^rk,sum_rk,'Linewidth',2)
+% hold on
+% plot(2.^rk,sum_rk_TT,'--','Linewidth',2)
+% xlabel('Number of particles','Fontsize',12)
+% legend('Summend ranks TTNO binary tree','Summed ranks TTNO TT'...
+%       ,'Fontsize',12)
 
 function[cluster] = cluster_rec_HSS(cluster,d)
 

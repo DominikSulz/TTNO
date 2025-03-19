@@ -6,8 +6,6 @@ addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\hm-toolbox-master')
 addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\tensor_toolbox-master')
 
 %% initializations
-d = 2^4;           % number of particles
-l = log(d)/log(2); % number of layers
 n = 2;             % physical dimension
 
 sx=[0,1;1,0];      % Pauli Matrix \sigma_x
@@ -17,12 +15,18 @@ Delta = -2;
 Omega = 3;
 alpha = 1;
 
-hss_tol = [10^-2, 10^-3, 10^-4, 10^-5, 10^-6, 10^-7,...
-           10^-8, 10^-9, 10^-10, 10^-11, 10^-12, 10^-13, 10^-14];
+rk = [3 4 5 6];
 
-[X,tau] = init_spin_all_dim_same_rank(4,1,d); % initial data - needed for construct exact operator
+N = 50; % number of iterations in power method
+lambda = zeros(N,length(rk));
+r_max = 15;
 
-for kk=1:length(hss_tol)              
+for kk=1:length(rk)
+    d = 2^rk(kk);           % number of particles
+    l = log(d)/log(2);      % number of layers
+    
+    [X,tau] = init_spin_all_dim_same_rank(4,1,d); % initial data - needed for construct exact operator
+    
     %% interaction matrix - single particle
     A_single = cell(1,d);
     for ii=1:d
@@ -43,7 +47,7 @@ for kk=1:length(hss_tol)
     end
     
     %% HSS
-    hssoption('threshold',hss_tol(kk));
+    hssoption('threshold',10^-12);
     H_single = hss(V_single,'cluster',1:d);
     H_single = adjust_H(H_single);
     
@@ -60,8 +64,10 @@ for kk=1:length(hss_tol)
     %% exact TTNO
     B = linearisation_long_range_unitary(d,sx,n_Pu,nu,Delta,Omega,alpha);
     TTNO_exact_single = make_operator(X,B,tau,n*ones(1,d));
+    TTNO_exact_single = rounding(TTNO_exact_single,tau);
     
     TTNO_exact_int = TTNO_no_structure(A_int,V_int,l,l,n*ones(d,1),1:d);
+    TTNO_exact_int = rounding(TTNO_exact_int,tau);
     
     TTNO_exact = Add_TTN(TTNO_exact_single,TTNO_exact_int,tau);
     
@@ -78,19 +84,55 @@ for kk=1:length(hss_tol)
     
     ex_rk(kk) = hssrank(H_int) + 2 + 1; % +1 for the non interacting part
     
+    %% approximate spectral error
+    tic
+    yj = X;
+    for jj=1:N
+        yold = yj;
+        yj = apply_operator_nonglobal(yj,E,d);
+        yj = rounding(yj,tau);
+        yj = truncate(yj,10^-14,r_max,2);
+        lambda(jj,kk) = Mat0Mat0(yold,yj)/Mat0Mat0(yold,yold);
+    end
+    err_spec(kk) = lambda(end,kk);
+    toc
+    
     kk
 end
-hssoption('threshold',10^-12) % set all hss option values back to default
+hssoption('threshold',10^-12);
 
 % plot
+figure(1)
 subplot(1,2,1)
-loglog(hss_tol,err_scaled,'Linewidth',2)
-xlabel('HSS tolerance','Fontsize',12)
+semilogy(2.^rk,err_scaled,'Linewidth',2)
+xlabel('Number of particles','Fontsize',12)
 legend('Scaled error in Frobenius norm','Fontsize',12)
 
 subplot(1,2,2)
-semilogx(hss_tol,max_rk,'Linewidth',2)
+plot(2.^rk,max_rk,'Linewidth',2)
 hold on
-semilogx(hss_tol,ex_rk,'--','Linewidth',2)
-xlabel('HSS tolerance','Fontsize',12)
-legend('Maximal rank of the TTNO','hssrank + 2 + 1','Fontsize',12)
+% plot(2.^rk,ex_rk,'--','Linewidth',2)
+xlabel('Number of particles','Fontsize',12)
+% legend('Maximal rank of the TTNO','hssrank + 2 + 1','Fontsize',12)
+legend('Maximal rank of the TTNO')
+
+figure(2)
+for kk=1:length(rk)
+    plot(1:N,lambda(:,kk),'Linewidth',2)
+    hold on
+end
+xlabel('Number of iterations power method','Fontsize',12)
+
+figure(3)
+subplot(1,2,1)
+semilogy(2.^rk,err_spec,'Linewidth',2)
+xlabel('Number of particles','Fontsize',12)
+legend('Error in spectral norm','Fontsize',12)
+
+subplot(1,2,2)
+plot(2.^rk,max_rk,'Linewidth',2)
+hold on
+% plot(2.^rk,ex_rk,'--','Linewidth',2)
+xlabel('Number of particles','Fontsize',12)
+% legend('Maximal rank of the TTNO','hssrank + 2 + 1','Fontsize',12)
+legend('Maximal rank of the TTNO')

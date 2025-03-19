@@ -2,6 +2,9 @@ function [TTNO] = TTNO_no_structure_arbitrary_tree(A,V,X,l,num_l,n,pos)
 % This code works for long-range operators of the form
 % \sum_i<j A^(i)A^(j)
 
+% note ordering: [Id,a^1,...a1^(m+1),interactions] -> different to binary
+% case
+
 I = eye(n(1),n(1));
 I = I(:);
 

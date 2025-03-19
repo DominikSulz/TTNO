@@ -6,7 +6,7 @@ addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\hm-toolbox-master')
 addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\tensor_toolbox-master')
 
 %% initializations
-d = 2^4;           % number of particles
+d = 2^5;           % number of particles
 l = log(d)/log(2); % number of layers
 n = 2;             % physical dimension
 
@@ -19,6 +19,10 @@ alpha = 1;
 
 hss_tol = [10^-2, 10^-3, 10^-4, 10^-5, 10^-6, 10^-7,...
            10^-8, 10^-9, 10^-10, 10^-11, 10^-12, 10^-13, 10^-14];
+       
+N = 100; % number of iterations in power method
+lambda = zeros(N,length(hss_tol));
+r_max = 20;
 
 [X,tau] = init_spin_all_dim_same_rank(4,1,d); % initial data - needed for construct exact operator
 
@@ -78,11 +82,28 @@ for kk=1:length(hss_tol)
     
     ex_rk(kk) = hssrank(H_int) + 2 + 1; % +1 for the non interacting part
     
+    %% approximate spectral error
+    tic
+    yj = X;
+    E = rounding(E,tau);
+    for jj=1:N
+        tmp = sqrt(Mat0Mat0(yj,yj));
+        yj{end} = yj{end}/tmp;
+        yold = yj;
+        yj = apply_operator_nonglobal(yj,E,d);
+        yj = rounding(yj,tau);
+        yj = truncate(yj,10^-14,r_max,2);
+        lambda(jj,kk) = abs(Mat0Mat0(yold,yj)/Mat0Mat0(yold,yold));
+    end
+    err_spec(kk) = lambda(end,kk);
+    toc
+    
     kk
 end
 hssoption('threshold',10^-12) % set all hss option values back to default
 
 % plot
+figure(1)
 subplot(1,2,1)
 loglog(hss_tol,err_scaled,'Linewidth',2)
 xlabel('HSS tolerance','Fontsize',12)
@@ -94,3 +115,37 @@ hold on
 semilogx(hss_tol,ex_rk,'--','Linewidth',2)
 xlabel('HSS tolerance','Fontsize',12)
 legend('Maximal rank of the TTNO','hssrank + 2 + 1','Fontsize',12)
+
+figure(2)
+for kk=1:length(hss_tol)
+    semilogy(1:N,lambda(:,kk),'Linewidth',2)
+    hold on
+end
+xlabel('Number of iterations power method','Fontsize',12)
+title('Approximation of largest eigenvalue for d=32 particles')
+
+figure(3)
+subplot(1,2,1)
+loglog(hss_tol,err_spec,'Linewidth',2)
+xlabel('HSS tolerance','Fontsize',12)
+legend('Error in spectral norm','Fontsize',12)
+
+subplot(1,2,2)
+semilogx(hss_tol,max_rk,'Linewidth',2)
+hold on
+semilogx(hss_tol,ex_rk,'--','Linewidth',2)
+xlabel('HSS tolerance','Fontsize',12)
+legend('Maximal rank of the TTNO','hssrank + 2 + 1','Fontsize',12)
+
+figure(4)
+subplot(1,2,1)
+loglog(hss_tol,err_scaled,'Linewidth',2)
+xlabel('HSS tolerance','Fontsize',12)
+legend('Scaled error in Frobenius norm','Fontsize',12)
+title('Frobenius error for d=32 particles')
+
+subplot(1,2,2)
+loglog(hss_tol,err_spec,'Linewidth',2)
+xlabel('HSS tolerance','Fontsize',12)
+legend('Error in spectral norm','Fontsize',12)
+title('Spectral error for d=32 particles')

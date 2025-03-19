@@ -1,7 +1,7 @@
 clear all; clc; close all;
 
 addpath('C:\Users\Dominik\Documents\MATLAB\Low rank approximations\TTNO')
-addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\hm-toolbox-master\hm-toolbox-master')
+addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\hm-toolbox-master')
 % addpath('C:\Users\Dominik\Documents\MATLAB\Low rank approximations\rank_adaptive_integrator_for_TTN')
 % addpath('C:\Users\Dominik\Documents\MATLAB\Matlab toolboxes\tensor_toolbox-master')
 
@@ -45,7 +45,7 @@ V = inv(A_int);
 
 %% construction of TTNO with help of HSS
 tic
-TTNO = TTNO_no_structure_abitrary_tree(A,V,X,l,l,n*ones(d,1),1:d);
+TTNO = TTNO_no_structure_arbitrary_tree(A,V,X,l,l,n*ones(d,1),1:d);
 toc 
 % TTNO = rounding(TTNO,tau);
 

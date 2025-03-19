@@ -25,7 +25,7 @@ n_Pu=[1,0;0,0];    % Projector onto the excited state Pu=(sz+id)/2;
 id=[1,0;0,1];     %% Identity for the single spin
 J = [0,0;1,0];
 
-rk = [1 2 3 4 5 6 7];
+rk = [1 2 3 4 5 6 7 8 9];
 
 for kk=1:length(rk)
     d = 2^rk(kk);           % number of particles
@@ -119,24 +119,34 @@ plot(2.^rk,max_rk_TT,'--','Linewidth',2)
 % plot(2.^rk,max_rk_ex,'--','Linewidth',2)
 % plot(2.^rk,max_rk_TT_ex,'--','Linewidth',2)
 xlabel('Number of particles','Fontsize',12)
-legend('Maximal rank of the TTNO binary tree','Maximal rank of the TTNO TT',...
+legend('Representation rank of the TTNO binary tree','Representation rank of the TTNO TT',...
 'Fontsize',12)
 
 subplot(1,2,2)
+yyaxis left
 plot(2.^rk,mem,'Linewidth',2)
 hold on
-plot(2.^rk,mem_TT,'--','Linewidth',2)
-xlabel('Number of particles','Fontsize',12)
-legend('memory TTNO binary tree','Memory TTNO TT'...
-      ,'Fontsize',12)
+plot(2.^rk,mem_TT,'r--','Linewidth',2)
+ylabel('Memory in bytes')
+ax = gca;                           % Get current axes
+ax.YColor = 'k';
+yyaxis right
+ax = gca;                           % Get current axes
+ax.YColor = 'k';
+plot(2.^rk,mem./mem_TT,'kx:','Linewidth',2)
+xlabel('Number of particles','Fontsize',14)
+xlim([2^rk(1) 2^rk(end)])
+ylabel('Memory ratio')
+legend('Memory TTNO binary tree in bytes','Memory TTNO TT in bytes',...
+      'Ratio memory HT / memory TT','Fontsize',14)
   
 figure(2)
 plot(2.^rk,mem_app,'Linewidth',2)
 hold on
 plot(2.^rk,mem_app_TT,'--','Linewidth',2)
-xlabel('Number of particles','Fontsize',12)
+xlabel('Number of particles','Fontsize',14)
 legend('Memory application TTNO binary tree','Memory application TTNO TT'...
-      ,'Fontsize',12)
+      ,'Fontsize',14)
 
 
 

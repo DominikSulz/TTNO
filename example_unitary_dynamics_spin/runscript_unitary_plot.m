@@ -43,7 +43,7 @@ for kk=1:length(rk)
     end
     
     %% HSS
-    hssoption('threshold',10^-4);
+    hssoption('threshold',10^-12);
     H_single = hss(V_single,'cluster',1:d);
     H_single = adjust_H(H_single);
     
